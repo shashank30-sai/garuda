@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Safe Browsing URL Checker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        input[type="text"] {
+            width: 80%;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Safe Browsing URL Checker</h1>
+        <form id="urlForm">
+            <input type="text" name="url" id="url" placeholder="Enter a URL to check" required>
+            <button type="submit">Check URL</button>
+        </form>
+        <div id="result" class="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        document.getElementById("urlForm").addEventListener("submit", async function (e) {
+            e.preventDefault();
+            const url = document.getElementById("url").value;
+            const resultDiv = document.getElementById("result");
+            resultDiv.style.display = "none";
+            resultDiv.innerHTML = "";
+
+            try {
+                const response = await fetch("/check_url", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    body: new URLSearchParams({ url }),
+                });
+
+                const data = await response.json();
+                resultDiv.style.display = "block";
+
+                if (data.safe) {
+                    resultDiv.innerHTML = `<p>✅ The URL is safe!</p>`;
+                } else if (data.threats) {
+                    resultDiv.innerHTML = `<p>🚨 The URL is unsafe! Threats detected:</p><pre>${JSON.stringify(data.threats, null, 2)}</pre>`;
+                } else if (data.error) {
+                    resultDiv.innerHTML = `<p>⚠️ Error: ${data.message || "An error occurred"}</p>`;
+                }
+            } catch (error) {
+                resultDiv.style.display = "block";
+                resultDiv.innerHTML = `<p>⚠️ Error: ${error.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>
